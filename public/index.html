@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Express Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .example {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .demo-image {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            margin-top: 15px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+        }
+        .tab.active {
+            background-color: #f5f5f5;
+            border-color: #ddd;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-fast {
+            background-color: #2196F3;
+        }
+        .btn-fast:hover {
+            background-color: #0b7dda;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Express Server</h1>
+        <p>This is a static HTML page being served from the public directory.</p>
+        <p>You can also check the API status at <a href="/api/status">/api/status</a></p>
+    </div>
+
+    <div class="container">
+        <h1>API Documentation</h1>
+        
+        <h2>POST /creator</h2>
+        <p>Create and post content to social media platforms.</p>
+        
+        <h3>Request Body</h3>
+        <div class="example">
+            <pre><code>{
+  "type": "image",
+  "text": "Dont just focus on the techinal things. Focus on What your developing also.",
+  "audio": "https://example.supabase.co/storage/v1/object/public/audio/audio.mp3",
+  "caption": "YOO testing"
+}</code></pre>
+        </div>
+        
+        <h3>Parameters</h3>
+        <ul>
+            <li><strong>type</strong> (string): Content type - currently only "image" is supported</li>
+            <li><strong>text</strong> (string): Text to display on the generated image</li>
+            <li><strong>audio</strong> (string): URL to the audio file that will be combined with the image</li>
+            <li><strong>caption</strong> (string): Caption to use when posting to social media</li>
+            <li><strong>duration</strong> (number, optional): Duration in seconds, default is 10</li>
+            <li><strong>aspectratio</strong> (string, optional): Aspect ratio for the output, default is "9:16"</li>
+        </ul>
+        
+        <h3>Response</h3>
+        <div class="example">
+            <pre><code>{
+  "success": true,
+  "message": "Video created and posted to social media",
+  "videoGeneration": {
+    "success": true,
+    "url": "https://example.com/video/path.mp4"
+  },
+  "socialPosting": {
+    "success": true,
+    "message": "Video posted to Facebook successfully as reel",
+    "results": {
+      "facebook": {
+        "success": true,
+        "id": "123456789",
+        "type": "reel"
+      }
+    }
+  }
+}</code></pre>
+        </div>
+        
+        <h3>Example Usage</h3>
+        <div class="example">
+            <pre><code>fetch('/creator', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    type: "image",
+    text: "Dont just focus on the techinal things. Focus on What your developing also.",
+    audio: "https://example.supabase.co/storage/v1/object/public/audio/audio.mp3",
+    caption: "YOO testing"
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to show loading state
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<span class="loading"></span> Processing...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.getAttribute('data-original-text') || 'Generate';
+            }
+        }
+        
+        // Helper function to fetch video
+        async function createVideo(params) {
+            const url = `/video?${new URLSearchParams(params).toString()}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to create video');
+                return await response.json();
+            } catch (error) {
+                console.error('Error creating video:', error);
+                alert('Error creating video. Please try again.');
+                return null;
+            }
+        }
+        
+        // Image form submission
+        document.getElementById('imageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const imageUrl = document.getElementById('imageUrl').value;
+            const titleText = document.getElementById('titleText').value;
+            const bodyText = document.getElementById('bodyText').value;
+            
+            const generatedUrl = `/image?image=${encodeURIComponent(imageUrl)}&title=${encodeURIComponent(titleText)}&text=${encodeURIComponent(bodyText)}`;
+            document.getElementById('generatedUrl').innerHTML = `<a href="${generatedUrl}" target="_blank">${generatedUrl}</a>`;
+        });
+        
+        // Example video generation
+        async function generateExampleVideo(fastMode) {
+            const buttonSelector = fastMode ? 
+                'button.btn-fast[onclick="generateExampleVideo(true)"]' : 
+                'button.btn:not(.btn-fast)[onclick="generateExampleVideo(false)"]';
+            const button = document.querySelector(buttonSelector);
+            
+            if (!button.getAttribute('data-original-text')) {
+                button.setAttribute('data-original-text', button.innerHTML);
+            }
+            
+            setLoading(button, true);
+            
+            const params = {
+                image: 'https://images.unsplash.com/photo-37-c85e8a162699',
+                audio: 'https://files.freemusicarchive.org/storage-hive-org/music/ccCommunity/Kai_Engel/Satin/Kai_Engel_-_09_-_Sunset.mp3',
+                duration: 15,
+                fast: fastMode ? 'true' : 'false'
+            };
+            
+            const result = await createVideo(params);
+            
+            setLoading(button, false);
+            
+            if (result && result.success) {
+                const resultDiv = document.getElementById('exampleVideoResult');
+                resultDiv.style.display = 'block';
+                
+                const videoLink = document.getElementById('exampleVideoLink');
+                
+                if (result.mode === 'fast') {
+                    // Fast mode (separate image and audio)
+                    document.getElementById('exampleVideoContainer').style.display = 'none';
+                    const mediaContainer = document.getElementById('exampleMediaContainer');
+                    mediaContainer.style.display = 'block';
+                    
+                    const exampleImage = document.getElementById('exampleImage');
+                    exampleImage.src = result.imageUrl;
+                    
+                    const exampleAudio = document.getElementById('exampleAudio');
+                    exampleAudio.src = result.audioUrl;
+                    exampleAudio.setAttribute('data-duration', result.duration);
+                    
+                    videoLink.href = result.imageUrl;
+                } else {
+                    // Video mode
+                    document.getElementById('exampleVideoContainer').style.display = 'block';
+                    document.getElementById('exampleMediaContainer').style.display = 'none';
+                    
+                    const videoPlayer = document.getElementById('exampleVideoPlayer');
+                    videoPlayer.src = result.videoUrl;
+                    
+                    videoLink.href = result.videoUrl;
+                }
+            }
+        }
+        
+        // Generate custom video with fast mode option
+        async function generateCustomVideo(fastMode) {
+            const button = fastMode ? 
+                document.querySelector('.btn-fast') :
+                document.querySelector('button[data-mode="normal"]');
+            
+            if (!button.getAttribute('data-original-text')) {
+                button.setAttribute('data-original-text', button.innerHTML);
+            }
+            
+            setLoading(button, true);
+            
+            const imageUrl = document.getElementById('videoImageUrl').value;
+            const audioUrl = document.getElementById('audioUrl').value;
+            const duration = document.getElementById('videoDuration').value;
+            
+            const params = {
+                image: imageUrl,
+                audio: audioUrl,
+                duration: duration,
+                fast: fastMode ? 'true' : 'false'
+            };
+            
+            const result = await createVideo(params);
+            
+            setLoading(button, false);
+            
+            if (result && result.success) {
+                const resultDiv = document.getElementById('videoResult');
+                resultDiv.style.display = 'block';
+                
+                const videoLink = document.getElementById('videoLink');
+                
+                if (result.mode === 'fast') {
+                    // Fast mode (separate image and audio)
+                    document.getElementById('videoContainer').style.display = 'none';
+                    const mediaContainer = document.getElementById('mediaContainer');
+                    mediaContainer.style.display = 'block';
+                    
+                    const resultImage = document.getElementById('resultImage');
+                    resultImage.src = result.imageUrl;
+                    
+                    const resultAudio = document.getElementById('resultAudio');
+                    resultAudio.src = result.audioUrl;
+                    resultAudio.setAttribute('data-duration', result.duration);
+                    
+                    videoLink.href = result.imageUrl;
+                } else {
+                    // Video mode
+                    document.getElementById('videoContainer').style.display = 'block';
+                    document.getElementById('mediaContainer').style.display = 'none';
+                    
+                    const videoPlayer = document.getElementById('videoPlayer');
+                    videoPlayer.src = result.videoUrl;
+                    
+                    videoLink.href = result.videoUrl;
+                }
+            }
+        }
+        
+        // Video form submission
+        document.getElementById('videoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            generateCustomVideo(false);
+        });
+        
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(function(t) {
+                    t.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(function(content) {
+                    content.classList.remove('active');
+                });
+                
+                // Show the corresponding tab content
+                const target = this.getAttribute('data-target');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html> 
