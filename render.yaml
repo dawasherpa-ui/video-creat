@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: video-creator
+    runtime: node
+    plan: free  # or "starter", "standard", etc.
+    buildCommand: ""  # optional, if you have no build step
+    startCommand: node server.js
+    envVars:
+      - key: GEMINI_API_KEY
+        value: your_gemini_api_key
+      - key: BASE_URL
+        value: https://your-service-name.onrender.com
+      - key: SUPABASE_URL
+        value: your_supabase_url
+      - key: SUPABASE_KEY
+        value: your_supabase_key
+      - key: FACEBOOK_PAGE_ID
+        value: your_facebook_page_id
+      - key: FACEBOOK_ACCESS_TOKEN
+        value: your_facebook_page_access_token
